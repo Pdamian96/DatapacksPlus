@@ -4,18 +4,18 @@ This Plugin aims to add useful commands that are useable inside of datapacks usi
 Its mostly for people (like me) who like to make things with datapacks, but are annoyed by the limitations they have.
 
 ## Current Features
-- **/motion @target <x> <y> <z>**
+- **/motion @target < x > < y > < z >**
   Flings the player with x y z motion
-- **/motionscore @target <xObjective> <yObjective> <zObjective>** 
+- **/motionscore @target < xObjective > < yObjective > < zObjective >** 
   Flings the player with x y z motion, using the number from the targets scoreboard value for each given objective.
   
-- **/slot @target(max 1 player) <number>**
+- **/slot @target(max 1 player) < number >**
   Sets the players slot (0-8)
   
 - **/slot @target(max 1 player)**
   Returns the players Current Selected Slot
   
-- **/tagremoveall @target <excludedtag1> <excludedtag2> ....**
+- **/tagremoveall @target < excludedtag1 > < excludedtag2 > ....**
   removes all tags apart from the ones exlcuded
   
 ## **!IMPORTANT!**
