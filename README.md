@@ -38,11 +38,11 @@ Its mostly for people (like me) who like to make things with datapacks, but are 
   Executes <command> amount of times, with a delay of delay
   
 - **/serverboard**
-Shows a personal scoreboard on the side of the screen. To configure, look in the config file for this plugin.
+Shows a personal scoreboard on the side of the screen. To configure, look in the config file for this plugin. 
 Available replacements:
-{player} -> Returns Player Name
-{health} -> Returns Player Health
-{objective.NAME} -> Returns the Players value for scoreboard NAME
+  {player} -> Returns Player Name
+  {health} -> Returns Player Health
+  {objective.NAME} -> Returns the Players value for scoreboard NAME
 
 Commands for this:
 
@@ -106,6 +106,7 @@ There are a number of tags you can give a player, to give them certain propertie
 # Custom Scoreboards
 **plugin.opengui**
 - Players get added 1 when they enter a GUI
+- 
 **plugin.closegui**
 - Players get added 1 when they leave a GUI
 
