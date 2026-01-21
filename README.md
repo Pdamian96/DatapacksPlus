@@ -11,6 +11,7 @@ Its mostly for people (like me) who like to make things with datapacks, but are 
   
 - **/relativemotion @targets <horizontal> <vertical> <forward> <ignore_vertical_rotation>**
   Flings the player with relative motion
+  
 - **/slot @target(max 1 player) < number >**
   Sets the players slot (0-8)
   
