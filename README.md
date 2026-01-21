@@ -13,7 +13,7 @@ Its mostly for people (like me) who like to make things with datapacks, but are 
   Flings the player with relative motion
   
 - **/slot @target(max 1 player) < number >**
-Sets the players slot (0-8)
+  Sets the players slot (0-8)
   
 - **/slot @target(max 1 player)**
   Returns the players Current Selected Slot
