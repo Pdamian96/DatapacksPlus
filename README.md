@@ -2,7 +2,8 @@
 ## About this Plugin
 This Plugin aims to add useful commands that are useable inside of datapacks using commandAPI.
 Its mostly for people (like me) who like to make things with datapacks, but are annoyed by the limitations they have.
-
+**IMPORTANT**
+If you want to disable server boards, run **/serverboard show default false @a** Every time someone joins, as the joining person. I will make a toggle later.
 ## Current Features
 - **/motion @targets < x > < y > < z >**  
   Flings the player with x y z motion
@@ -45,7 +46,9 @@ Shows a personal scoreboard on the side of the screen. To configure, look in the
 Available replacements:  
 * {player} -> Returns Player Name
 * {health} -> Returns Player Health
-* {objective.NAME} -> Returns the Players value for scoreboard NAME
+* {objective.NAME} -> Returns the Players value for scoreboard NAME  
+IMPORTANT LIMITATION:  
+While the player sees a serverboard, the teams will not work client side (so all the server side logic works fine, but, for example the players will be able to see each others name tags, no friendly invisiblites etc etc, essentially like they are not in a team. I will try to fix this)
 
 Commands for this:
 
