@@ -6,7 +6,7 @@ Its mostly for people (like me) who like to make things with datapacks, but are 
 ## Current Features
 - **/motion @targets < x > < y > < z >**
   Flings the player with x y z motion
-- **/motionscore @targets < xObjective > < yObjective > < zObjective >** 
+- **/motionscore @targets < xObjective > < yObjective > < zObjective >**
   Flings the player with x y z motion, using the number from the targets scoreboard value for each given objective.
   
 - **/relativemotion @targets <horizontal> <vertical> <forward> <ignore_vertical_rotation>**
