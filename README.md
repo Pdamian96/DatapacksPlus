@@ -42,7 +42,7 @@ Its mostly for people (like me) who like to make things with datapacks, but are 
   
 - **/serverboard**  
 Shows a personal scoreboard on the side of the screen. To configure, look in the config file for this plugin. 
-Available replacements:
+Available replacements:  
 * {player} -> Returns Player Name
 * {health} -> Returns Player Health
 * {objective.NAME} -> Returns the Players value for scoreboard NAME
