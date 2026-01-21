@@ -60,7 +60,7 @@ Commands for this:
   Updates the config and everyones serverboard
   
 
-  //Experimental and not fleshed out:  
+# Experimental Commands and not fleshed out:  
 - **/eval**  
   perform a caclulation 
   NOT DONE YET, STILL NEED TO ADD SCOREBOARD VARIABLE SUPPORT
