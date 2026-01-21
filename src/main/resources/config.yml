@@ -1,0 +1,17 @@
+default-scoreboard: "default"
+scoreboards:
+  default:
+    title: "&bLOBBY"
+    number-format:
+      type: "fixed"
+      value: "|"
+    lines:
+      - "&7Welcome {player}!"
+      - "&fCoins: &6{objective.coins}"
+  stats:
+    title: "&e&lTEST"
+    number-format:
+      type: "blank"
+    lines:
+      - "&Name: {player}"
+      - "&Health: {health}"

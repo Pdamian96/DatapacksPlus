@@ -1,4 +1,5 @@
 name: DatapacksPlus
-version: '1.0-SNAPSHOT'
+version: '1.0'
 main: org.shosancold.datapacksPlus.DatapacksPlus
+bootstrapper: org.shosancold.datapacksPlus.DatapacksPlusBootstrapper
 api-version: '1.21'
