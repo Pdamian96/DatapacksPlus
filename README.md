@@ -38,8 +38,13 @@ Its mostly for people (like me) who like to make things with datapacks, but are 
   Executes <command> amount of times, with a delay of delay
   
 - **/serverboard**
-Shows a personal scoreboard on the side of the screen. Configurable in the config
-Commands for this
+Shows a personal scoreboard on the side of the screen. To configure, look in the config file for this plugin.
+Available replacements:
+{player} -> Returns Player Name
+{health} -> Returns Player Health
+{objective.NAME} -> Returns the Players value for scoreboard NAME
+
+Commands for this:
 
 - **/serverboard show BOARD_NAME true/false @targets**
   Shows/Hides a specific serverboard for @targets (if you hide a serverboard for anyone, none will be shown)
