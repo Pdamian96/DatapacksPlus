@@ -95,7 +95,6 @@ There are a number of tags you can give a player, to give them certain propertie
 
 **prevent.attack.-player**  
 - prevents player from attacking JUST players
-  (Not needed due to /gamerule pvp, but still here due to legacy reasons)
   
 **prevent.attack.armorstand**  
 - prevents player from attacking armorstands
@@ -121,7 +120,7 @@ There are a number of tags you can give a player, to give them certain propertie
   
 ## **!IMPORTANT!**
  - any custom commands can not be in tagged functions (usually the tick function and the load function), that will cause the function not to run properly. If you want to use it in such functions, make a new function and add the custom command into it, and call that function from the tagged function.
-- Custom Commands no longer throw errors in the console in datapacks!
+- Custom Commands no longer throw errors in the console in datapacks! Thank you ComandAPI Gods.
 
 
 
