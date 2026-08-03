@@ -1,4 +1,5 @@
 default-scoreboard: "default"
+show-scoreboard-on-join: true
 scoreboards:
   default:
     title: "&bLOBBY"
@@ -15,3 +16,12 @@ scoreboards:
     lines:
       - "&Name: {player}"
       - "&Health: {health}"
+position-scoreboard:
+  enabled: true
+  prefix: "stalker_"
+  scale:
+    position: 1
+    rotation: 1
+    velocity: 100
+  velocity:
+    enabled: true

@@ -6,8 +6,10 @@ import dev.jorel.commandapi.arguments.*;
 import dev.jorel.commandapi.executors.CommandArguments;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
+import net.kyori.adventure.text.Component;
 import net.objecthunter.exp4j.ExpressionBuilder;
 import org.bukkit.*;
+import org.bukkit.Color;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -15,9 +17,11 @@ import org.bukkit.entity.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.util.Vector;
 
+import java.awt.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,6 +33,9 @@ import net.objecthunter.exp4j.function.Function;
 
 
 public class DatapacksPlusBootstrapper implements PluginBootstrap {
+
+    private static final Pattern SCORE_PATTERN =
+            Pattern.compile("\\{([a-zA-Z0-9_]+)\\?([^}]+)}");
 
 
     private Color getColorFromString(String input) {
@@ -55,7 +62,35 @@ public class DatapacksPlusBootstrapper implements PluginBootstrap {
         return obj.getScore(name).getScore();
     }
 
+    private static String replaceScoresEval(CommandSender sender, String expr) {
+        Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
+        Matcher matcher = SCORE_PATTERN.matcher(expr);
+        StringBuffer out = new StringBuffer();
 
+        while (matcher.find()) {
+            String objectiveName = matcher.group(1);
+            String entry = matcher.group(2);
+
+            if (entry.equals("@s")) {
+                if (sender instanceof Player p) {
+                    entry = p.getName();
+                } else {
+                    throw new IllegalArgumentException("@s used but sender is not a player");
+                }
+            }
+
+            Objective obj = board.getObjective(objectiveName);
+            if (obj == null) {
+                throw new IllegalArgumentException("Unknown objective: " + objectiveName);
+            }
+
+            int value = obj.getScore(entry).getScore();
+            matcher.appendReplacement(out, Integer.toString(value));
+        }
+
+        matcher.appendTail(out);
+        return out.toString();
+    }
     private static String replaceScores(String input) {
         Pattern pattern = Pattern.compile("([a-zA-Z0-9_]+)\\?([a-zA-Z0-9_]+)");
         Matcher matcher = pattern.matcher(input);
@@ -109,7 +144,7 @@ public class DatapacksPlusBootstrapper implements PluginBootstrap {
                     String iconId = (String) args.get("icon_id");
 
 
-                    // Create the anchor (ArmorStand is a LivingEntity, so it supports Waypoint API)
+
                     ArmorStand waypoint = (ArmorStand) pos.getWorld().spawnEntity(pos, EntityType.ARMOR_STAND);
                     waypoint.setMarker(true);
                     waypoint.setInvisible(true);
@@ -283,7 +318,6 @@ public class DatapacksPlusBootstrapper implements PluginBootstrap {
 
                                                     for (Player target : targets) {
                                                         if (show) {
-
                                                             DatapacksPlus.getInstance().createScoreboard(target, boardName);
                                                         } else {
                                                             DatapacksPlus.getInstance().removeScoreboard(target);
@@ -338,7 +372,9 @@ public class DatapacksPlusBootstrapper implements PluginBootstrap {
 
                     for (Player inventoryViewer : entities) {
                         if (inventoryViewer.isOnline()) {
-                            inventoryViewer.openInventory(inventoryViewer.getEnderChest());
+                            inventoryViewer.openInventory(
+                                    inventoryViewer.getEnderChest()
+                            );
                         }
                     }
                     return 0;
@@ -471,12 +507,12 @@ public class DatapacksPlusBootstrapper implements PluginBootstrap {
 
         // /relativemotion @targets <horizontal> <vertical> <forward> <ignore_vertical_rotation>
         new CommandAPICommand("relativemotion")
-                .withPermission("datapacksplus.relativemotion") // Require this permission to use the command
+                .withPermission("datapacksplus.relativemotion")
                 .withArguments(new EntitySelectorArgument.ManyEntities("targets"))
-                .withArguments(new DoubleArgument("horizontal")) // Left-right movement
-                .withArguments(new DoubleArgument("vertical"))   // Up-down movement
-                .withArguments(new DoubleArgument("forward"))    // Forward-backward movement
-                .withArguments(new BooleanArgument("ignore_vertical_rotation")) // If true, ignores pitch
+                .withArguments(new DoubleArgument("horizontal"))
+                .withArguments(new DoubleArgument("vertical"))
+                .withArguments(new DoubleArgument("forward"))
+                .withArguments(new BooleanArgument("ignore_vertical_rotation"))
                 .executes((sender, args) -> {
                     Collection<Entity> entities = (Collection<Entity>) args.get("targets");
                     double horizontal = (double) args.get("horizontal");
@@ -557,6 +593,27 @@ public class DatapacksPlusBootstrapper implements PluginBootstrap {
 
 
 
+        new CommandAPICommand("posboard")
+                .withPermission("datapacksplus.posboard.admin")
+                .withSubcommand(new CommandAPICommand("pause")
+                        .executes((sender, args) -> {
+                            DatapacksPlus.getInstance().setPositionUpdaterPaused(true);
+                            sender.sendMessage(ChatColor.YELLOW + "Position scoreboard updater paused.");
+                        }))
+                .withSubcommand(new CommandAPICommand("resume")
+                        .executes((sender, args) -> {
+                            DatapacksPlus.getInstance().setPositionUpdaterPaused(false);
+                            sender.sendMessage(ChatColor.GREEN + "Position scoreboard updater resumed.");
+                        }))
+                .withSubcommand(new CommandAPICommand("status")
+                        .executes((sender, args) -> {
+                            sender.sendMessage(
+                                    ChatColor.AQUA + "Position updater: " +
+                                            (DatapacksPlus.getInstance().isPositionUpdaterPaused() ? "PAUSED" : "RUNNING")
+                            );
+                        }))
+                .register();
+
         new CommandAPICommand("eval")
                 .withPermission("datapacksplus.eval")
                 .withArguments(new DoubleArgument("scale"))
@@ -567,25 +624,65 @@ public class DatapacksPlusBootstrapper implements PluginBootstrap {
                     String rawExpr = (String) args.get("expression");
 
                     try {
-                        String expr = replaceScores(rawExpr);
 
+
+                        String expr = replaceScoresEval(sender, rawExpr);
+                        if (sender instanceof Player) {
+                            if(((Player) sender).getScoreboardTags().contains("debug")) {
+                                sender.sendMessage("§8[eval] Raw: §7" + rawExpr);
+                                sender.sendMessage("§8[eval] After score replace: §7" + expr);
+                            }
+                        }
                         Expression e = new ExpressionBuilder(expr)
+
                                 .function(new Function("clamp", 3) {
                                     @Override
                                     public double apply(double... a) {
                                         return Math.max(a[1], Math.min(a[2], a[0]));
                                     }
                                 })
+
+                                .function(new Function("dot", 6) {
+                                    @Override
+                                    public double apply(double... a) {
+                                        return a[0]*a[3] + a[1]*a[4] + a[2]*a[5];
+                                    }
+                                })
+
+                                .function(new Function("len", 3) {
+                                    @Override
+                                    public double apply(double... a) {
+                                        return Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+                                    }
+                                })
+
+                                .function(new Function("angle", 6) {
+                                    @Override
+                                    public double apply(double... a) {
+                                        double dot = a[0]*a[3] + a[1]*a[4] + a[2]*a[5];
+                                        double la = Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+                                        double lb = Math.sqrt(a[3]*a[3] + a[4]*a[4] + a[5]*a[5]);
+                                        return Math.acos(dot / (la * lb));
+                                    }
+                                })
+
                                 .build();
 
-                        double result = e.evaluate() * scale;
+                        double eval = e.evaluate();
+                        double result = eval * scale;
+                        if (sender instanceof Player) {
+                            if(((Player) sender).getScoreboardTags().contains("debug")){
+                                sender.sendMessage("§8[eval] Raw result: §7" + eval);
+                                sender.sendMessage("§7Result: §a" + result);
+                            }
 
-                        sender.sendMessage("§7Expression: §f" + expr);
-                        sender.sendMessage("§7Result: §a" + result);
-                        return (int) result;
+                        }
+
+                        return (int) Math.floor(result);
 
                     } catch (Exception ex) {
-                        sender.sendMessage("§cInvalid expression.");
+                        sender.sendMessage("§cEval error: §7" + ex.getClass().getSimpleName());
+                        sender.sendMessage("§cMessage: §7" + ex.getMessage());
                         return -1;
                     }
 

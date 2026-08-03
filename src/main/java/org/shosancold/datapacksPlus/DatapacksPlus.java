@@ -26,9 +26,21 @@ import java.util.regex.Pattern;
 ;
 public class DatapacksPlus extends JavaPlugin {
     private static DatapacksPlus instance;
-
+    private static final String[] POS_OBJECTIVES = {
+            "x", "y", "z",
+            "yaw", "pitch",
+            "vx", "vy", "vz",
+            "hx", "hz",
+            "speed", "hspeed",
+            "ax", "ay", "az",
+            "aspeed",
+            "grounded", "airborne"
+    };
     private final HashMap<UUID, Scoreboard> playerBoards = new HashMap<>();
     private final HashMap<UUID, String> activeBoardType = new HashMap<>();
+    private boolean positionUpdaterPaused = false;
+    private final Map<UUID, Vector> lastVelocity = new HashMap<>();
+
     @Override
     public void onEnable() {
         CommandAPI.onEnable();
@@ -40,11 +52,20 @@ public class DatapacksPlus extends JavaPlugin {
         ScoreboardManager manager = Bukkit.getScoreboardManager();
         Scoreboard scoreboard = manager.getMainScoreboard();
 
+
+
         if (scoreboard.getObjective("plugin.closegui") == null) {
             scoreboard.registerNewObjective(
                     "plugin.closegui",
                     Criteria.DUMMY,
                     Component.text("InventoryCloseEvent")
+            );
+        }
+        if (scoreboard.getObjective("plugin.preAttack") == null) {
+            scoreboard.registerNewObjective(
+                    "plugin.preAttack",
+                    Criteria.DUMMY,
+                    Component.text("preAttackEvent")
             );
         }
 
@@ -56,8 +77,113 @@ public class DatapacksPlus extends JavaPlugin {
             );
         }
 
+        Scoreboard main = Bukkit.getScoreboardManager().getMainScoreboard();
+
+        String prefix = getConfig().getString("position-scoreboard.prefix", "pos_");
+
+        for (String key : POS_OBJECTIVES) {
+            String name = prefix + key;
+            if (main.getObjective(name) == null) {
+                main.registerNewObjective(
+                        name,
+                        Criteria.DUMMY,
+                        Component.text(name)
+                );
+            }
+        }
         getLogger().info("DatapacksPlus enabled");
+        startPositionUpdater();
+
     }
+
+    private void set(Scoreboard board, String objectiveName, Player player, double value, int scale) {
+        Objective obj = board.getObjective(objectiveName);
+        if (obj != null) {
+            obj.getScore(player.getName()).setScore((int) Math.round(value * scale));
+        }
+    }
+
+    private void set(Scoreboard board, String objectiveName, Player player, int value) {
+        Objective obj = board.getObjective(objectiveName);
+        if (obj != null) {
+            obj.getScore(player.getName()).setScore(value);
+        }
+    }
+    public boolean isPositionUpdaterPaused() {
+        return positionUpdaterPaused;
+    }
+    public void setPositionUpdaterPaused(boolean paused) {
+        this.positionUpdaterPaused = paused;
+    }
+    private void startPositionUpdater() {
+        if (!getConfig().getBoolean("position-scoreboard.enabled", true)) return;
+
+        Scoreboard main = Bukkit.getScoreboardManager().getMainScoreboard();
+        String prefix = getConfig().getString("position-scoreboard.prefix", "pos_");
+
+        int posScale = getConfig().getInt("position-scoreboard.scale.position", 1);
+        int rotScale = getConfig().getInt("position-scoreboard.scale.rotation", 1);
+        int velScale = getConfig().getInt("position-scoreboard.scale.velocity", 100);
+        int accScale = getConfig().getInt("position-scoreboard.scale.acceleration", 100);
+
+        boolean velocityEnabled = getConfig().getBoolean("position-scoreboard.velocity.enabled", true);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (positionUpdaterPaused) return;
+
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    Location l = player.getLocation();
+                    Vector v = player.getVelocity();
+
+                    // --- Position / rotation ---
+                    set(main, prefix + "x", player, l.getX(), posScale);
+                    set(main, prefix + "y", player, l.getY(), posScale);
+                    set(main, prefix + "z", player, l.getZ(), posScale);
+
+                    set(main, prefix + "yaw", player, l.getYaw(), rotScale);
+                    set(main, prefix + "pitch", player, l.getPitch(), rotScale);
+
+                    // --- Grounded state ---
+                    boolean grounded = player.isOnGround();
+                    set(main, prefix + "grounded", player, grounded ? 1 : 0);
+                    set(main, prefix + "airborne", player, grounded ? 0 : 1);
+
+                    if (!velocityEnabled) continue;
+
+                    // --- Velocity ---
+                    set(main, prefix + "vx", player, v.getX(), velScale);
+                    set(main, prefix + "vy", player, v.getY(), velScale);
+                    set(main, prefix + "vz", player, v.getZ(), velScale);
+
+                    set(main, prefix + "hx", player, v.getX(), velScale);
+                    set(main, prefix + "hz", player, v.getZ(), velScale);
+
+                    double speed = v.length();
+                    double hSpeed = Math.sqrt(v.getX() * v.getX() + v.getZ() * v.getZ());
+
+                    set(main, prefix + "speed", player, speed, velScale);
+                    set(main, prefix + "hspeed", player, hSpeed, velScale);
+
+                    // --- Acceleration ---
+                    Vector last = lastVelocity.get(player.getUniqueId());
+                    if (last != null) {
+                        Vector a = v.clone().subtract(last);
+
+                        set(main, prefix + "ax", player, a.getX(), accScale);
+                        set(main, prefix + "ay", player, a.getY(), accScale);
+                        set(main, prefix + "az", player, a.getZ(), accScale);
+                        set(main, prefix + "aspeed", player, a.length(), accScale);
+                    }
+
+                    lastVelocity.put(player.getUniqueId(), v.clone());
+                }
+            }
+        }.runTaskTimer(this, 1L, 1L);
+    }
+
+
 
     public void ConfigReload() {
 

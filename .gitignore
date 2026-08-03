@@ -1,2 +1,11 @@
+# Project exclude paths
+/.gradle/
+/.idea/
+/build/
+/build/classes/java/main/
+/gradle.properties
+
+# AutoUpdate
 /config.json
+/autoUpdate
 /autoUpdate.exe

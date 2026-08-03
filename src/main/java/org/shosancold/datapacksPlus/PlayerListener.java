@@ -1,5 +1,7 @@
 package org.shosancold.datapacksPlus;
 
+import io.papermc.paper.datapack.Datapack;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
@@ -62,7 +64,6 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
-        // intentionally empty
     }
 
     @EventHandler
@@ -138,6 +139,16 @@ public class PlayerListener implements Listener {
         Score score = objective.getScore(e.getPlayer().getName());
         score.setScore(score.getScore() + 1);
     }
+    @EventHandler
+    public void onPlayerSwing(PrePlayerAttackEntityEvent e) {
+
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective objective = scoreboard.getObjective("plugin.preAttack");
+        if (objective == null) return;
+
+        Score score = objective.getScore(e.getPlayer().getName());
+        score.setScore(score.getScore() + 1);
+    }
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) {
@@ -181,11 +192,21 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        String defaultBoard = plugin.getConfig().getString("default-scoreboard", "default");
-        plugin.createScoreboard(e.getPlayer(), defaultBoard);
+        boolean isEnabled = plugin.getConfig().getBoolean("show-scoreboard-on-join", false);
+
+        if (isEnabled) {
+            String defaultBoard = plugin.getConfig().getString("default-scoreboard", "default");
+            plugin.createScoreboard(e.getPlayer(), defaultBoard);
+        }
     }
+
+
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        plugin.removeScoreboard(e.getPlayer());
+        if (plugin.getConfig().getBoolean("show-scoreboard-on-join", false)) {
+            plugin.removeScoreboard(e.getPlayer());
+        }
     }
+
+
 }
